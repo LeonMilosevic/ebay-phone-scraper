@@ -35,7 +35,32 @@ def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: U
 
     return urls
 
-def scrape_phones(brand: str, number_of_items: int) -> pd.DataFrame:
+def create_dataframe(
+    brand: str, 
+    phone_price: list, 
+    phone_model: list, 
+    phone_ram: list, 
+    phone_storage: list, 
+    phone_processor: list, 
+    phone_camera: list) -> pd.DataFrame:
+    
+    df = pd.DataFrame(
+        data=zip(
+            phone_price, 
+            phone_model, 
+            phone_ram, 
+            phone_storage, 
+            phone_processor, 
+            phone_camera),
+        columns=['price', 'model', 'ram', 'storage', 'processor', 'camera']
+        )
+    df['brand'] = brand
+    return df
+
+def export_csv_file(df: pd.DataFrame) -> None:
+    df.to_csv(r'./phone_data.csv', index=False)
+
+def scrape_phones(brand: str, number_of_items: int) -> None:
     brandId = check_brandId(brand)
     number_of_pages = calculate_number_of_pages(number_of_items)
     user_agent = UserAgent()
@@ -57,7 +82,7 @@ def scrape_phones(brand: str, number_of_items: int) -> pd.DataFrame:
         temp_camera = np.nan
 
         if soup.find(class_="display-price"):
-            temp_price = souop.find(class_="display-price").get_text()
+            temp_price = soup.find(class_="display-price").get_text()
         
         for item in soup.find_all('div', class_='s-name'):
 
@@ -65,16 +90,16 @@ def scrape_phones(brand: str, number_of_items: int) -> pd.DataFrame:
                 temp_model = item.next_sibling.get_text()
 
             if item.get_text() == "RAM":
-                print(item.next_sibling.get_text())
+                temp_ram = item.next_sibling.get_text()
 
             if item.get_text() == "Storage Capacity":
-                print(item.next_sibling.get_text())
+                temp_storage = item.next_sibling.get_text()
 
             if item.get_text() == "Processor":
-                print(item.next_sibling.get_text())
+                temp_processor = item.next_sibling.get_text()
 
             if item.get_text() == "Camera Resolution":
-                print(item.next_sibling.get_text())
+                temp_camera = item.next_sibling.get_text()
         
         phone_price.append(temp_price)
         phone_model.append(temp_model)
@@ -83,4 +108,13 @@ def scrape_phones(brand: str, number_of_items: int) -> pd.DataFrame:
         phone_processor.append(temp_processor)
         phone_camera.append(temp_camera)
 
-scrape_phones("Apple", 48)
+    phone_df = create_dataframe(
+        brand=brand,
+        phone_price=phone_price,
+        phone_model=phone_model,
+        phone_ram=phone_ram,
+        phone_storage=phone_storage,
+        phone_processor=phone_processor,
+        phone_camera=phone_camera)
+    
+    export_csv_file(phone_df)
