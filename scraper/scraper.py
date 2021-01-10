@@ -5,6 +5,17 @@ import pandas as pd
 import numpy as np
 
 def check_brandId(brand: str) -> int:
+    """All brands have unique code that needs to be passed to the ebay url. 
+        This function assigns a unique code based on the brand name.
+    Args:
+        brand (str): name of the brand, example: Apple
+
+    Raises:
+        ValueError: Informs the user what is accepted as parametars
+
+    Returns:
+        int: unique brand code, that will be used for a page url
+    """
     brandId: int
     if brand == "Apple":
         brandId = 319682
@@ -20,10 +31,30 @@ def check_brandId(brand: str) -> int:
     return brandId
 
 def calculate_number_of_pages(number_of_items: int) -> int:
+    """Calculates number of pages that will be scraped based on number of items user wants to get.
+        By default, each page has 48 items.
+
+    Args:
+        number_of_items (int): number of items user wants to scrape
+
+    Returns:
+        int: number of pages that will be scraped
+    """
     return int(round(number_of_items / 48)) 
    
 
 def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: UserAgent) -> list:
+    """Extracts url from each item on the main page of ebay, returns a list of urls.
+
+    Args:
+        number_of_pages (int): previously calculated number of pages, used in the url
+        brand (str): given brand, used in the url
+        brandId (int): unique brand code, used in the url
+        user_agent (UserAgent): tells ebay what browser we are using
+
+    Returns:
+        list: list of single phones
+    """
     urls = []
     
     for page_number in range(number_of_pages):
@@ -43,7 +74,20 @@ def create_dataframe(
     phone_storage: list, 
     phone_processor: list, 
     phone_camera: list) -> pd.DataFrame:
-    
+    """creates a dataframe from passed lists, returns the created dataframe
+
+    Args:
+        brand (str): name of the brand we scraped
+        phone_price (list): price of each phone
+        phone_model (list): model of each phone
+        phone_ram (list): ram memory of each phone
+        phone_storage (list): storage room of each phone
+        phone_processor (list): processor of each phone
+        phone_camera (list): camera resolution of each phone
+
+    Returns:
+        pd.DataFrame: pandas dataframe for further analysis
+    """
     df = pd.DataFrame(
         data=zip(
             phone_price, 
@@ -58,9 +102,31 @@ def create_dataframe(
     return df
 
 def export_csv_file(df: pd.DataFrame) -> None:
+    """accepts a dataframe, exports a csv file to the main directory
+
+    Args:
+        df (pd.DataFrame): generated dataframe
+    """
     df.to_csv(r'./phone_data.csv', index=False)
 
 def scrape_phones(brand: str, number_of_items: int) -> None:
+    """Main function of the package. Accepts a name of the brand, number of items wished to scrape.
+    Checks for unique brand code, calculates number of pages,
+    scrapes each page for phones: Model, Storage, Price, Camera, Processor, Ram.
+    If something is missing from the page replaces it with NaN,
+    Creates a dataframe, and exports a csv file
+
+    Helper Functions Used:
+        check_brandId(),
+        calculate_number_of_pages(),
+        get_phones_url(),
+        create_dataframe(),
+        export_csv_file()
+
+    Args:
+        brand (str): Type of phone brand to be scraped
+        number_of_items (int): How many items needed to be scraped
+    """
     brandId = check_brandId(brand)
     number_of_pages = calculate_number_of_pages(number_of_items)
     user_agent = UserAgent()
