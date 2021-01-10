@@ -28,7 +28,7 @@ Import packages:
 
 ##### Scrape ebay for phones:
 
-scraper.scrape_phones('Apple', 5000)
+scraper.scrape_phones('Apple', 5000)\
 scraper.scrape_phones('Samsung', 5000)
 
 ##### Expected Results:
