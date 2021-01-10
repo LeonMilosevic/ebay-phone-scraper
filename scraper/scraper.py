@@ -101,13 +101,13 @@ def create_dataframe(
     df['brand'] = brand
     return df
 
-def export_csv_file(df: pd.DataFrame) -> None:
+def export_csv_file(df: pd.DataFrame, brand: str) -> None:
     """accepts a dataframe, exports a csv file to the main directory
 
     Args:
         df (pd.DataFrame): generated dataframe
     """
-    df.to_csv(r'./phone_data.csv', index=False)
+    df.to_csv(f"{brand}_data.csv", index=False)
 
 def scrape_phones(brand: str, number_of_items: int) -> None:
     """Main function of the package. Accepts a name of the brand, number of items wished to scrape.
@@ -183,4 +183,4 @@ def scrape_phones(brand: str, number_of_items: int) -> None:
         phone_processor=phone_processor,
         phone_camera=phone_camera)
     
-    export_csv_file(phone_df)
+    export_csv_file(phone_df, brand)
