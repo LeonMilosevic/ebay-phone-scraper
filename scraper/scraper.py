@@ -3,6 +3,7 @@ from fake_useragent import UserAgent
 import requests
 import pandas as pd
 import numpy as np
+import concurrent.futures
 
 def check_brandId(brand: str) -> int:
     """All brands have unique code that needs to be passed to the ebay url. 
@@ -30,6 +31,26 @@ def check_brandId(brand: str) -> int:
 
     return brandId
 
+def check_condition(condition: str) -> int:
+    """Function is checking for the passed parametar in order to assign a correct value for the url to be scraped
+
+    Args:
+        condition (str): only accepts 'used' or 'new'
+
+    Raises:
+        ValueError: if condition is not 'used' or 'new'
+
+    Returns:
+        int: specific code for a given argument
+    """
+    conditionNum: int
+    if condition == "new":
+        conditionNum = 1000
+    elif condition == "used":
+        conditionNum = 3000
+    else:
+        raise ValueError("Function only supports 'new' or 'used'")
+
 def calculate_number_of_pages(number_of_items: int) -> int:
     """Calculates number of pages that will be scraped based on number of items user wants to get.
         By default, each page has 48 items.
@@ -42,8 +63,7 @@ def calculate_number_of_pages(number_of_items: int) -> int:
     """
     return int(round(number_of_items / 48)) 
    
-
-def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: UserAgent) -> list:
+def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: UserAgent, conditionCode: int) -> list:
     """Extracts url from each item on the main page of ebay, returns a list of urls.
 
     Args:
@@ -58,7 +78,7 @@ def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: U
     urls = []
     
     for page_number in range(number_of_pages):
-        url = f"https://www.ebay.com/b/{brand}-Cell-Phones-Smartphones/9355/bn_{brandId}?LH_ItemCondition=1000|3000&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
+        url = f"https://www.ebay.com/b/{brand}-Cell-Phones-Smartphones/9355/bn_{brandId}?LH_ItemCondition={conditionCode}&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
         page = requests.get(url, headers={"User-Agent": user_agent.google})
         soup = BeautifulSoup(page.content, "html.parser")
 
@@ -66,8 +86,51 @@ def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: U
 
     return urls
 
+def single_phone_url_scraper(url: str) -> list:
+    """ It accepts a url, scrapes the url, assigns scraped data to a list, returns a list
+
+    Args:
+        url (str): url to be scraped
+
+    Returns:
+        list: list of scraped items
+    """
+    user_agent = UserAgent()
+    page = requests.get(url, headers={"User-Agent": user_agent.google})
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    temp_price = np.nan
+    temp_model = np.nan
+    temp_ram = np.nan
+    temp_storage = np.nan
+    temp_processor = np.nan
+    temp_camera = np.nan
+
+    if soup.find(class_="display-price"):
+        temp_price = soup.find(class_="display-price").get_text()
+        
+    for item in soup.find_all('div', class_='s-name'):
+
+        if item.get_text() == "Model":
+            temp_model = item.next_sibling.get_text()
+
+        if item.get_text() == "RAM":
+            temp_ram = item.next_sibling.get_text()
+
+        if item.get_text() == "Storage Capacity":
+            temp_storage = item.next_sibling.get_text()
+
+        if item.get_text() == "Processor":
+            temp_processor = item.next_sibling.get_text()
+
+        if item.get_text() == "Camera Resolution":
+            temp_camera = item.next_sibling.get_text()
+
+    return [temp_price, temp_model, temp_ram, temp_storage, temp_processor, temp_camera]
+
 def create_dataframe(
-    brand: str, 
+    brand: str,
+    condition: str, 
     phone_price: list, 
     phone_model: list, 
     phone_ram: list, 
@@ -78,6 +141,7 @@ def create_dataframe(
 
     Args:
         brand (str): name of the brand we scraped
+        condition (str): condition of the phone
         phone_price (list): price of each phone
         phone_model (list): model of each phone
         phone_ram (list): ram memory of each phone
@@ -99,18 +163,26 @@ def create_dataframe(
         columns=['price', 'model', 'ram', 'storage', 'processor', 'camera']
         )
     df['brand'] = brand
+    temp_condition: int
+    if condition == 'new':
+        temp_condition = 1
+    else:
+        temp_condition = 0
+    
+    df['condition'] = temp_condition
+
     return df
 
-def export_csv_file(df: pd.DataFrame, brand: str) -> None:
+def export_csv_file(df: pd.DataFrame, brand: str, condition: str) -> None:
     """accepts a dataframe, exports a csv file to the main directory
 
     Args:
         df (pd.DataFrame): generated dataframe
     """
-    df.to_csv(f"{brand}_data.csv", index=False)
+    df.to_csv(f"{brand}_{condition}_data.csv", index=False)
 
-def scrape_phones(brand: str, number_of_items: int) -> None:
-    """Main function of the package. Accepts a name of the brand, number of items wished to scrape.
+def scrape_phones(brand: str, number_of_items: int, condition: str) -> None:
+    """Main function of the package. Accepts a name of the brand, number of items wished to scrape, condition of the phone.
     Checks for unique brand code, calculates number of pages,
     scrapes each page for phones: Model, Storage, Price, Camera, Processor, Ram.
     If something is missing from the page replaces it with NaN,
@@ -118,6 +190,7 @@ def scrape_phones(brand: str, number_of_items: int) -> None:
 
     Helper Functions Used:
         check_brandId(),
+        check_condition(),
         calculate_number_of_pages(),
         get_phones_url(),
         create_dataframe(),
@@ -128,54 +201,28 @@ def scrape_phones(brand: str, number_of_items: int) -> None:
         number_of_items (int): How many items needed to be scraped
     """
     brandId = check_brandId(brand)
+    conditionCode = check_condition(condition)
     number_of_pages = calculate_number_of_pages(number_of_items)
     user_agent = UserAgent()
 
     phone_model, phone_ram, phone_storage, phone_processor, phone_camera, phone_price = ([] for i in range(6))
     
-    single_phone_urls = get_phones_url(number_of_pages, brand, brandId, user_agent)
+    single_phone_urls = get_phones_url(number_of_pages, brand, brandId, user_agent, conditionCode)
 
-    for single_phone_url in single_phone_urls:
-        url = single_phone_url
-        page = requests.get(url, headers={"User-Agent": user_agent.google})
-        soup = BeautifulSoup(page.content, "html.parser")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = executor.map(single_phone_url_scraper, single_phone_urls)
 
-        temp_price = np.nan
-        temp_model = np.nan
-        temp_ram = np.nan
-        temp_storage = np.nan
-        temp_processor = np.nan
-        temp_camera = np.nan
-
-        if soup.find(class_="display-price"):
-            temp_price = soup.find(class_="display-price").get_text()
-        
-        for item in soup.find_all('div', class_='s-name'):
-
-            if item.get_text() == "Model":
-                temp_model = item.next_sibling.get_text()
-
-            if item.get_text() == "RAM":
-                temp_ram = item.next_sibling.get_text()
-
-            if item.get_text() == "Storage Capacity":
-                temp_storage = item.next_sibling.get_text()
-
-            if item.get_text() == "Processor":
-                temp_processor = item.next_sibling.get_text()
-
-            if item.get_text() == "Camera Resolution":
-                temp_camera = item.next_sibling.get_text()
-        
-        phone_price.append(temp_price)
-        phone_model.append(temp_model)
-        phone_ram.append(temp_ram)
-        phone_storage.append(temp_storage)
-        phone_processor.append(temp_processor)
-        phone_camera.append(temp_camera)
-
+        for result in results:
+            phone_price.append(result[0])
+            phone_model.append(result[1])
+            phone_ram.append(result[2])
+            phone_storage.append(result[3])
+            phone_processor.append(result[4])
+            phone_camera.append(result[5]) 
+             
     phone_df = create_dataframe(
         brand=brand,
+        condition=condition,
         phone_price=phone_price,
         phone_model=phone_model,
         phone_ram=phone_ram,
@@ -183,4 +230,6 @@ def scrape_phones(brand: str, number_of_items: int) -> None:
         phone_processor=phone_processor,
         phone_camera=phone_camera)
     
-    export_csv_file(phone_df, brand)
+    export_csv_file(phone_df, brand, condition)
+
+scrape_phones('Apple', 3000, 'new')

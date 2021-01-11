@@ -22,6 +22,20 @@ def test_check_brandIdError():
   with pytest.raises(ValueError):
       scraper.check_brandId('bad')
 
+def test_check_conditionNew():
+  result = scraper.check_condition('new')
+
+  assert result == 1000
+
+def test_check_conditionUsed():
+  result = scraper.check_condition('used')
+
+  assert result = 3000
+
+def test_check_conditionError():
+    with pytest.raises(ValueError):
+        scraper.check_condition('something else')
+
 def test_calculate_number_of_pages():
     result = scraper.calculate_number_of_pages(48)
 
