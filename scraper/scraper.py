@@ -231,5 +231,3 @@ def scrape_phones(brand: str, number_of_items: int, condition: str) -> None:
         phone_camera=phone_camera)
     
     export_csv_file(phone_df, brand, condition)
-
-scrape_phones('Apple', 3000, 'new')
