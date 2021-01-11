@@ -50,6 +50,7 @@ def check_condition(condition: str) -> int:
         conditionNum = 3000
     else:
         raise ValueError("Function only supports 'new' or 'used'")
+    return conditionNum
 
 def calculate_number_of_pages(number_of_items: int) -> int:
     """Calculates number of pages that will be scraped based on number of items user wants to get.
