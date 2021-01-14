@@ -46,7 +46,8 @@ def test_get_phones_url():
         number_of_pages=1,
         brand="Apple",
         brandId=319682,
-        user_agent=UserAgent()
+        user_agent=UserAgent(),
+        conditionCode = 3000
     )
 
     assert len(result) == 42
@@ -61,12 +62,14 @@ def test_create_datafrmae():
   phone_camera = ['16', '8', '12']
 
   result = scraper.create_datafrmae(
-    brand, 
-    phone_price, 
-    phone_model, 
-    phone_ram, 
-    phone_storage, 
-    phone_processor, 
-    phone_camera)
+    brand=brand, 
+    phone_price=phone_price, 
+    phone_model=phone_model, 
+    phone_ram=phone_ram, 
+    phone_storage=phone_storage, 
+    phone_processor=phone_processor, 
+    phone_camera=phone_camera,
+    condition=condition
+    )
 
     assert type(result) == pd.DataFrame
