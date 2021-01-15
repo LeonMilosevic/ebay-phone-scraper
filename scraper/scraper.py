@@ -17,6 +17,8 @@ def check_brandId(brand: str) -> int:
     Returns:
         int: unique brand code, that will be used for a page url
     """
+
+    # dont hard code id's, put it in a separate file
     brandId: int
     if brand == "Apple":
         brandId = 319682
