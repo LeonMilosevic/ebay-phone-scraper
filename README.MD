@@ -26,10 +26,16 @@ Import packages:
 
 - from scraper import scraper
 
+##### Brand id's required for ebay url:
+- Apple: 319682,
+- LG: 353985,
+- Huawei: 349965,
+- Samsung: 352130
+
 ##### Scrape ebay for phones:
 
-scraper.scrape_phones('Apple', 5000)\
-scraper.scrape_phones('Samsung', 5000)
+scraper.scrape_phones('Apple', 5000, 319682)\
+scraper.scrape_phones('Samsung', 5000, 352130)
 
 ##### Expected Results:
 

@@ -1,27 +1,3 @@
-def test_check_brandIdApple():
-  result = scraper.check_brandId('Apple')
-
-  assert result == 319682
-
-def test_check_brandIdLG():
-  result = scraper.check_brandId('LG')
-
-  assert result == 353985
-
-def test_check_brandIdHuawei():
-  result = scraper.check_brandId('Huawei')
-
-  assert result == 349965
-
-def test_check_brandIdSamsung():
-  result = scraper.check_brandId('Samsung')
-
-  assert result == 352130
-
-def test_check_brandIdError():
-  with pytest.raises(ValueError):
-      scraper.check_brandId('bad')
-
 def test_check_conditionNew():
   result = scraper.check_condition('new')
 
@@ -41,6 +17,7 @@ def test_calculate_number_of_pages():
 
     assert result == 1
 
+# tests that we cant control shouldnt be conducted
 def test_get_phones_url():
     result = scraper.get_phones_url(
         number_of_pages=1,

@@ -5,34 +5,6 @@ import pandas as pd
 import numpy as np
 import concurrent.futures
 
-def check_brandId(brand: str) -> int:
-    """All brands have unique code that needs to be passed to the ebay url. 
-        This function assigns a unique code based on the brand name.
-    Args:
-        brand (str): name of the brand, example: Apple
-
-    Raises:
-        ValueError: Informs the user what is accepted as parametars
-
-    Returns:
-        int: unique brand code, that will be used for a page url
-    """
-
-    # dont hard code id's, put it in a separate file
-    brandId: int
-    if brand == "Apple":
-        brandId = 319682
-    elif brand == "LG":
-        brandId = 353985
-    elif brand == "Huawei":
-        brandId = 349965
-    elif brand == "Samsung":
-        brandId = 352130
-    else:
-        raise ValueError("Function only supports Apple, LG, Huawei or Samsung brand")
-
-    return brandId
-
 def check_condition(condition: str) -> int:
     """Function is checking for the passed parametar in order to assign a correct value for the url to be scraped
 
@@ -66,13 +38,13 @@ def calculate_number_of_pages(number_of_items: int) -> int:
     """
     return int(round(number_of_items / 48)) 
    
-def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: UserAgent, conditionCode: int) -> list:
+def get_phones_url(number_of_pages: int, brand: str, brand_id: int, user_agent: UserAgent, conditionCode: int) -> list:
     """Extracts url from each item on the main page of ebay, returns a list of urls.
 
     Args:
         number_of_pages (int): previously calculated number of pages, used in the url
         brand (str): given brand, used in the url
-        brandId (int): unique brand code, used in the url
+        brand_id (int): unique brand code, used in the url
         user_agent (UserAgent): tells ebay what browser we are using
 
     Returns:
@@ -81,7 +53,7 @@ def get_phones_url(number_of_pages: int, brand: str, brandId: int, user_agent: U
     urls = []
     
     for page_number in range(number_of_pages):
-        url = f"https://www.ebay.com/b/{brand}-Cell-Phones-Smartphones/9355/bn_{brandId}?LH_ItemCondition={conditionCode}&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
+        url = f"https://www.ebay.com/b/{brand}-Cell-Phones-Smartphones/9355/bn_{brand_id}?LH_ItemCondition={conditionCode}&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
         page = requests.get(url, headers={"User-Agent": user_agent.google})
         soup = BeautifulSoup(page.content, "html.parser")
 
@@ -184,7 +156,7 @@ def export_csv_file(df: pd.DataFrame, brand: str, condition: str) -> None:
     """
     df.to_csv(f"{brand}_{condition}_data.csv", index=False)
 
-def scrape_phones(brand: str, number_of_items: int, condition: str) -> None:
+def scrape_phones(brand: str, number_of_items: int, condition: str, brand_id: int) -> None:
     """Main function of the package. Accepts a name of the brand, number of items wished to scrape, condition of the phone.
     Checks for unique brand code, calculates number of pages,
     scrapes each page for phones: Model, Storage, Price, Camera, Processor, Ram.
@@ -192,7 +164,6 @@ def scrape_phones(brand: str, number_of_items: int, condition: str) -> None:
     Creates a dataframe, and exports a csv file
 
     Helper Functions Used:
-        check_brandId(),
         check_condition(),
         calculate_number_of_pages(),
         get_phones_url(),
@@ -203,14 +174,13 @@ def scrape_phones(brand: str, number_of_items: int, condition: str) -> None:
         brand (str): Type of phone brand to be scraped
         number_of_items (int): How many items needed to be scraped
     """
-    brandId = check_brandId(brand)
     conditionCode = check_condition(condition)
     number_of_pages = calculate_number_of_pages(number_of_items)
     user_agent = UserAgent()
 
     phone_model, phone_ram, phone_storage, phone_processor, phone_camera, phone_price = ([] for i in range(6))
     
-    single_phone_urls = get_phones_url(number_of_pages, brand, brandId, user_agent, conditionCode)
+    single_phone_urls = get_phones_url(number_of_pages, brand, brand_id, user_agent, conditionCode)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = executor.map(single_phone_url_scraper, single_phone_urls)
