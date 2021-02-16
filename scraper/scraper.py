@@ -153,11 +153,11 @@ class Scraper:
             temp_price = soup.find(class_="display-price").get_text()
 
         for item in soup.find_all('div', class_='s-name'):
-            temp_model = item.next_sibling.get_text() if item.get_text() == "Model"
-            temp_ram = item.next_sibling.get_text() if item.get_text() == "RAM"
-            temp_storage = item.next_sibling.get_text() if item.get_text() == "Storage Capacity"
-            temp_processor = item.next_sibling.get_text() if item.get_text() == "Processor"
-            temp_camera = item.next_sibling.get_text() if item.get_text() == "Camera Resolution"
+            if item.get_text() == "Model": temp_model = item.next_sibling.get_text() 
+            if item.get_text() == "RAM": temp_ram = item.next_sibling.get_text()
+            if item.get_text() == "Storage Capacity": temp_storage = item.next_sibling.get_text() 
+            if item.get_text() == "Processor": temp_processor = item.next_sibling.get_text() 
+            if item.get_text() == "Camera Resolution": temp_camera = item.next_sibling.get_text() 
         
         return [temp_price, temp_model, temp_ram, temp_storage, temp_processor, temp_camera]
 
