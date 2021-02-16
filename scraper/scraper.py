@@ -5,202 +5,196 @@ import pandas as pd
 import numpy as np
 import concurrent.futures
 
-def check_condition(condition: str) -> int:
-    """Function is checking for the passed parametar in order to assign a correct value for the url to be scraped
-
-    Args:
-        condition (str): only accepts 'used' or 'new'
-
-    Raises:
-        ValueError: if condition is not 'used' or 'new'
-
-    Returns:
-        int: specific code for a given argument
+class Scraper:
     """
-    conditionNum: int
-    if condition == "new":
-        conditionNum = 1000
-    elif condition == "used":
-        conditionNum = 3000
-    else:
-        raise ValueError("Function only supports 'new' or 'used'")
-    return conditionNum
+    A class that scrapes ebay for phones based on provided brand, condition and number of items
 
-def calculate_number_of_pages(number_of_items: int) -> int:
-    """Calculates number of pages that will be scraped based on number of items user wants to get.
-        By default, each page has 48 items.
+    ...
 
-    Args:
-        number_of_items (int): number of items user wants to scrape
+    Attributes
+    ----------
+    brand : string
+        name of the brand that you want scraped, example: 'Apple'
 
-    Returns:
-        int: number of pages that will be scraped
-    """
-    return int(round(number_of_items / 48)) 
-   
-def get_phones_url(number_of_pages: int, brand: str, brand_id: int, user_agent: UserAgent, conditionCode: int) -> list:
-    """Extracts url from each item on the main page of ebay, returns a list of urls.
-
-    Args:
-        number_of_pages (int): previously calculated number of pages, used in the url
-        brand (str): given brand, used in the url
-        brand_id (int): unique brand code, used in the url
-        user_agent (UserAgent): tells ebay what browser we are using
-
-    Returns:
-        list: list of single phones
-    """
-    urls = []
+    number_of_items : int
+        number of phones to be scraped
     
-    for page_number in range(number_of_pages):
-        url = f"https://www.ebay.com/b/{brand}-Cell-Phones-Smartphones/9355/bn_{brand_id}?LH_ItemCondition={conditionCode}&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
+    condition_name : string
+        condition of the phones to be scraped, 'used' or 'new'
+
+
+    Methods
+    -------
+    get_condition():
+        returns a code for used or new condition to be used in the url
+    
+    get_brand_id():
+        returns a code for a given brand to be used in the url
+
+    get_num_of_pages():
+        returns number of pages to be used in the url
+
+    get_phones_url():
+        returns urls from the main page of ebay and stores the specific model url in a list
+
+    get_single_phone():
+        scrapes the single model phone from get_phones_url list, returns a list of features
+
+    scrape_phones():
+        main method of the class, creates a csv file in the main directory
+    """
+    def __init__(self, brand: str, number_of_items: int, condition_name: str):
+        """
+        Constructs a default state of attributes.
+        
+        Args:
+            brand: (string)
+                Name of the brand that will be scraped
+            number_of_items: (int)
+                Number of items that will be scraped
+            condition_name: (str)
+                Condition type that will be scraped
+        """
+        self.__brand = brand
+        self.__number_of_items = number_of_items
+        self.__condition_name = condition_name
+    
+    def get_condition(self) -> int:
+        """Function is checking condition_name state in order to assign a correct value code for the url to be scraped
+
+        Raises:
+            KeyError: if condition is not 'used' or 'new'
+
+        Returns:
+            int: specific code for a given condition
+        """
+        condition_code = {"new": 1000, "used": 3000}
+
+        try:
+            return condition_code[self.__condition_name] 
+        except KeyError:
+            raise KeyError("condition_name must be a string 'new' or 'used'") 
+
+    def get_brand_id(self) -> int:
+        """Function is checking brand state in order to assign a correct value code for the url to be scraped
+
+        Raises:
+            KeyError: if brand is not 'Apple', 'LG', 'Huawei', 'Samsung'
+
+        Returns:
+            int: specific code for a given brand
+        """
+        brand_id_codes = {
+            "Apple": 319682, 
+            "LG": 353985, 
+            "Huawei": 349965, 
+            "Samsung": 352130}
+
+        try:
+            return brand_id_codes[self.__brand]
+        except KeyError:
+            raise KeyError("brand must be 'Apple', 'LG', 'Huawei' or 'Samsung'")
+
+    def get_num_of_pages(self) -> int:
+        """Calculates number of pages that will be scraped based on number of items user wants to get.
+            By default, each page has 48 items.
+
+        Returns:
+            int: number of pages that will be scraped
+        """
+
+        if self.__number_of_items != int:
+            raise ValueError("number_of_items must be of int type")
+
+        return int(round(self.__number_of_items / 48))
+
+    def get_phones_url(self) -> list:
+        """Extracts url from each item on the main page of ebay, returns a list of urls.
+
+        Returns:
+            list: list of single phones
+        """
+        urls = []
+        number_of_pages = self.get_num_of_pages()
+        condition_code = self.get_condition()
+        brand_id = self.get_brand_id()
+        user_agent = UserAgent()
+
+        for page_number in range(number_of_pages):
+            url = f"https://www.ebay.com/b/{self.__brand}-Cell-Phones-Smartphones/9355/bn_{brand_id}?LH_ItemCondition={condition_code}&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
+            page = requests.get(url, headers={"User-Agent": user_agent.google})
+            soup = BeautifulSoup(page.content, "html.parser")
+
+            urls.extend([links.get('href', np.nan) for links in soup.find_all('a', class_="s-item__link")])
+        
+        return urls
+
+    def get_single_phone(self, url: str) -> list:
+        """ It accepts a url, scrapes the url, assigns scraped data to a list, returns a list
+
+        Args:
+            url (str): url to be scraped
+
+        Returns:
+            list: list of scraped items
+        """
+        user_agent = UserAgent()
         page = requests.get(url, headers={"User-Agent": user_agent.google})
         soup = BeautifulSoup(page.content, "html.parser")
 
-        urls.extend([links.get('href', np.nan) for links in soup.find_all('a', class_="s-item__link")])
+        temp_price = np.nan
+        temp_model = np.nan
+        temp_ram = np.nan
+        temp_storage = np.nan
+        temp_processor = np.nan
+        temp_camera = np.nan
 
-    return urls
+        if soup.find(class_="display-price"):
+            temp_price = soup.find(class_="display-price").get_text()
 
-def single_phone_url_scraper(url: str) -> list:
-    """ It accepts a url, scrapes the url, assigns scraped data to a list, returns a list
-
-    Args:
-        url (str): url to be scraped
-
-    Returns:
-        list: list of scraped items
-    """
-    user_agent = UserAgent()
-    page = requests.get(url, headers={"User-Agent": user_agent.google})
-    soup = BeautifulSoup(page.content, "html.parser")
-
-    temp_price = np.nan
-    temp_model = np.nan
-    temp_ram = np.nan
-    temp_storage = np.nan
-    temp_processor = np.nan
-    temp_camera = np.nan
-
-    if soup.find(class_="display-price"):
-        temp_price = soup.find(class_="display-price").get_text()
+        for item in soup.find_all('div', class_='s-name'):
+            temp_model = item.next_sibling.get_text() if item.get_text() == "Model"
+            temp_ram = item.next_sibling.get_text() if item.get_text() == "RAM"
+            temp_storage = item.next_sibling.get_text() if item.get_text() == "Storage Capacity"
+            temp_processor = item.next_sibling.get_text() if item.get_text() == "Processor"
+            temp_camera = item.next_sibling.get_text() if item.get_text() == "Camera Resolution"
         
-    for item in soup.find_all('div', class_='s-name'):
+        return [temp_price, temp_model, temp_ram, temp_storage, temp_processor, temp_camera]
 
-        if item.get_text() == "Model":
-            temp_model = item.next_sibling.get_text()
+    def scrape_phones(self) -> None:
+        """Main function of the package. Scrapes the data with other functions, creates a dataframe,
+        exports the dataframe as csv file.
 
-        if item.get_text() == "RAM":
-            temp_ram = item.next_sibling.get_text()
+        Returns:
+            csv_file: exports csv file in the main directory with scraped data
+        """
 
-        if item.get_text() == "Storage Capacity":
-            temp_storage = item.next_sibling.get_text()
+        phone_model, phone_ram, phone_storage, phone_processor, phone_camera, phone_price = ([] for i in range(6))
+        phones_url = self.get_phones_url()
 
-        if item.get_text() == "Processor":
-            temp_processor = item.next_sibling.get_text()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = executor.map(self.get_single_phone(), phones_url)
+            
+            for result in results:
+                phone_price.append(result[0])
+                phone_model.append(result[1])
+                phone_ram.append(result[2])
+                phone_storage.append(result[3])
+                phone_processor.append(result[4])
+                phone_camera.append(result[5]) 
 
-        if item.get_text() == "Camera Resolution":
-            temp_camera = item.next_sibling.get_text()
+        df = pd.DataFrame(
+            data=zip(
+                phone_price, 
+                phone_model, 
+                phone_ram, 
+                phone_storage, 
+                phone_processor, 
+                phone_camera),
+            columns=['price', 'model', 'ram', 'storage', 'processor', 'camera']
+            )
 
-    return [temp_price, temp_model, temp_ram, temp_storage, temp_processor, temp_camera]
+        df['brand'] = self.__brand
+        df['condition'] = self.__condition_name
 
-def create_dataframe(
-    brand: str,
-    condition: str, 
-    phone_price: list, 
-    phone_model: list, 
-    phone_ram: list, 
-    phone_storage: list, 
-    phone_processor: list, 
-    phone_camera: list) -> pd.DataFrame:
-    """creates a dataframe from passed lists, returns the created dataframe
-
-    Args:
-        brand (str): name of the brand we scraped
-        condition (str): condition of the phone
-        phone_price (list): price of each phone
-        phone_model (list): model of each phone
-        phone_ram (list): ram memory of each phone
-        phone_storage (list): storage room of each phone
-        phone_processor (list): processor of each phone
-        phone_camera (list): camera resolution of each phone
-
-    Returns:
-        pd.DataFrame: pandas dataframe for further analysis
-    """
-    df = pd.DataFrame(
-        data=zip(
-            phone_price, 
-            phone_model, 
-            phone_ram, 
-            phone_storage, 
-            phone_processor, 
-            phone_camera),
-        columns=['price', 'model', 'ram', 'storage', 'processor', 'camera']
-        )
-    df['brand'] = brand
-    temp_condition: int
-    if condition == 'new':
-        temp_condition = 1
-    else:
-        temp_condition = 0
-    
-    df['condition'] = temp_condition
-
-    return df
-
-def export_csv_file(df: pd.DataFrame, brand: str, condition: str) -> None:
-    """accepts a dataframe, exports a csv file to the main directory
-
-    Args:
-        df (pd.DataFrame): generated dataframe
-    """
-    df.to_csv(f"{brand}_{condition}_data.csv", index=False)
-
-def scrape_phones(brand: str, number_of_items: int, condition: str, brand_id: int) -> None:
-    """Main function of the package. Accepts a name of the brand, number of items wished to scrape, condition of the phone.
-    Checks for unique brand code, calculates number of pages,
-    scrapes each page for phones: Model, Storage, Price, Camera, Processor, Ram.
-    If something is missing from the page replaces it with NaN,
-    Creates a dataframe, and exports a csv file
-
-    Helper Functions Used:
-        check_condition(),
-        calculate_number_of_pages(),
-        get_phones_url(),
-        create_dataframe(),
-        export_csv_file()
-
-    Args:
-        brand (str): Type of phone brand to be scraped
-        number_of_items (int): How many items needed to be scraped
-    """
-    conditionCode = check_condition(condition)
-    number_of_pages = calculate_number_of_pages(number_of_items)
-    user_agent = UserAgent()
-
-    phone_model, phone_ram, phone_storage, phone_processor, phone_camera, phone_price = ([] for i in range(6))
-    
-    single_phone_urls = get_phones_url(number_of_pages, brand, brand_id, user_agent, conditionCode)
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(single_phone_url_scraper, single_phone_urls)
-
-        for result in results:
-            phone_price.append(result[0])
-            phone_model.append(result[1])
-            phone_ram.append(result[2])
-            phone_storage.append(result[3])
-            phone_processor.append(result[4])
-            phone_camera.append(result[5]) 
-             
-    phone_df = create_dataframe(
-        brand=brand,
-        condition=condition,
-        phone_price=phone_price,
-        phone_model=phone_model,
-        phone_ram=phone_ram,
-        phone_storage=phone_storage,
-        phone_processor=phone_processor,
-        phone_camera=phone_camera)
-    
-    export_csv_file(phone_df, brand, condition)
+        return df.to_csv(f"{self.__brand}_{self.__condition_name}_data.csv", index=False)
