@@ -52,5 +52,5 @@ def test_get_num_of_pages_true():
 
 def test_get_num_of_pages_error():
   scraper = Scraper('Something else', '3000', 'new')
-  with pytest.raises(ValueError):
+  with pytest.raises(TypeError):
     scraper.get_num_of_pages()

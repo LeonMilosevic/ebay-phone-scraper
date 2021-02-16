@@ -58,6 +58,7 @@ class Scraper:
         self.__brand = brand
         self.__number_of_items = number_of_items
         self.__condition_name = condition_name
+        self.
     
     def get_condition(self) -> int:
         """Function is checking condition_name state in order to assign a correct value code for the url to be scraped
@@ -104,8 +105,8 @@ class Scraper:
         """
         try:
             return int(round(self.__number_of_items / 48))
-        except ValueError:
-            raise ValueError("number_of_items must be of int type")
+        except TypeError:
+            raise TypeError("number_of_items must be of int type")
 
     def get_phones_url(self) -> list:
         """Extracts url from each item on the main page of ebay, returns a list of urls.
