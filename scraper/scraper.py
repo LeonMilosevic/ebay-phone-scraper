@@ -102,11 +102,10 @@ class Scraper:
         Returns:
             int: number of pages that will be scraped
         """
-
-        if self.__number_of_items != int:
+        try:
+            return int(round(self.__number_of_items / 48))
+        except ValueError:
             raise ValueError("number_of_items must be of int type")
-
-        return int(round(self.__number_of_items / 48))
 
     def get_phones_url(self) -> list:
         """Extracts url from each item on the main page of ebay, returns a list of urls.
