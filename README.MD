@@ -24,19 +24,13 @@ Install prerequisites:
 
 Import packages:
 
-- from scraper import scraper
-
-##### Brand id's required for ebay url:
-- Apple: 319682,
-- LG: 353985,
-- Huawei: 349965,
-- Samsung: 352130
+- from scraper import Scraper
 
 ##### Scrape ebay for phones:
 
-scraper.scrape_phones('Apple', 5000, 319682)\
-scraper.scrape_phones('Samsung', 5000, 352130)
+scraper = Scraper('Apple', 5000, 'new')\
+scraper.scrape_phones()
 
 ##### Expected Results:
 
-- brand_data.csv file with all scraped data in main directory 
+- brand_condition_data.csv file with all scraped data in main directory 
