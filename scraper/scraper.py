@@ -43,7 +43,7 @@ class Scraper:
     scrape_phones():
         main method of the class, creates a csv file in the main directory
     """
-    def __init__(self, brand: str, number_of_items: int, condition_name: str):
+    def __init__(self, brand: str, number_of_items: int = 0, condition_name: str):
         """
         Constructs a default state of attributes.
         

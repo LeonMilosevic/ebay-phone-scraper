@@ -6,14 +6,14 @@ def test_get_condition_new():
 
 def test_get_condition_used():
   scraper = Scraper('Apple', 3000, 'used')
-  result = scraper.check_condition()
+  result = scraper.get_condition()
 
   assert result = 3000
 
 def test_get_condition_error():
   scraper = Scraper('Apple', 3000, 'something else')
   with pytest.raises(KeyError):
-    scraper.check_condition()
+    scraper.get_condition()
 
 def test_get_brand_id_apple():
   scraper = Scraper('Apple', 3000, 'used')
