@@ -15,16 +15,11 @@ Package will help you scrape phones based on provided brand
 
 ### How to use it?
 
-Install prerequisites:
+Install prerequisite from requirements.txt
 
-- pip install fake-useragent,
-- pip install beautifulsoup4,
-- pip install requests,
-- pip install pandas
+Import class:
 
-Import packages:
-
-- from scraper import Scraper
+- from scraper.scraper import Scraper
 
 ##### Scrape ebay for phones:
 
