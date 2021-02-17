@@ -22,6 +22,10 @@ class Scraper:
     condition_name : string
         condition of the phones to be scraped, 'used' or 'new'
 
+    Class variables
+    ---------------
+    user_agent : UserAgent() object
+        UserAgent() object that will be used in the methods
 
     Methods
     -------
@@ -43,6 +47,9 @@ class Scraper:
     scrape_phones():
         main method of the class, creates a csv file in the main directory
     """
+
+    user_agent = UserAgent()
+    
     def __init__(self, brand: str, number_of_items: int, condition_name: str):
         """
         Constructs a default state of attributes.
@@ -59,7 +66,8 @@ class Scraper:
         self.__number_of_items = number_of_items
         self.__condition_name = condition_name
     
-    def get_condition(self) -> int:
+    @property
+    def condition_code(self) -> int:
         """Function is checking condition_name state in order to assign a correct value code for the url to be scraped
 
         Raises:
@@ -74,8 +82,9 @@ class Scraper:
             return condition_code[self.__condition_name] 
         except KeyError:
             raise KeyError("condition_name must be a string 'new' or 'used'") 
-
-    def get_brand_id(self) -> int:
+    
+    @property
+    def brand_id(self) -> int:
         """Function is checking brand state in order to assign a correct value code for the url to be scraped
 
         Raises:
@@ -94,8 +103,9 @@ class Scraper:
             return brand_id_codes[self.__brand]
         except KeyError:
             raise KeyError("brand must be 'Apple', 'LG', 'Huawei' or 'Samsung'")
-
-    def get_num_of_pages(self) -> int:
+    
+    @property
+    def num_of_pages(self) -> int:
         """Calculates number of pages that will be scraped based on number of items user wants to get.
             By default, each page has 48 items.
 
@@ -114,14 +124,10 @@ class Scraper:
             list: list of single phones
         """
         urls = []
-        number_of_pages = self.get_num_of_pages()
-        condition_code = self.get_condition()
-        brand_id = self.get_brand_id()
-        user_agent = UserAgent()
 
-        for page_number in range(number_of_pages):
-            url = f"https://www.ebay.com/b/{self.__brand}-Cell-Phones-Smartphones/9355/bn_{brand_id}?LH_ItemCondition={condition_code}&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
-            page = requests.get(url, headers={"User-Agent": user_agent.google})
+        for page_number in range(self.number_of_pages):
+            url = f"https://www.ebay.com/b/{self.__brand}-Cell-Phones-Smartphones/9355/bn_{self.brand_id}?LH_ItemCondition={self.condition_code}&LH_PrefLoc=5&LH_Sold=1&rt=nc&_pgn={page_number}"
+            page = requests.get(url, headers={"User-Agent": self.user_agent.google})
             soup = BeautifulSoup(page.content, "html.parser")
 
             urls.extend([links.get('href', np.nan) for links in soup.find_all('a', class_="s-item__link")])
@@ -137,8 +143,7 @@ class Scraper:
         Returns:
             list: list of scraped items
         """
-        user_agent = UserAgent()
-        page = requests.get(url, headers={"User-Agent": user_agent.google})
+        page = requests.get(url, headers={"User-Agent": self.user_agent.google})
         soup = BeautifulSoup(page.content, "html.parser")
 
         temp_price = np.nan
