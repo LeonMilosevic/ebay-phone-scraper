@@ -58,7 +58,6 @@ class Scraper:
         self.__brand = brand
         self.__number_of_items = number_of_items
         self.__condition_name = condition_name
-        self.
     
     def get_condition(self) -> int:
         """Function is checking condition_name state in order to assign a correct value code for the url to be scraped
@@ -161,7 +160,7 @@ class Scraper:
         
         return [temp_price, temp_model, temp_ram, temp_storage, temp_processor, temp_camera]
 
-    def scrape_phones(self) -> None:
+    def scrape_phones(self) -> file:
         """Main function of the package. Scrapes the data with other functions, creates a dataframe,
         exports the dataframe as csv file.
 
@@ -170,10 +169,12 @@ class Scraper:
         """
 
         phone_model, phone_ram, phone_storage, phone_processor, phone_camera, phone_price = ([] for i in range(6))
+        
         phones_url = self.get_phones_url()
+        fetch_single_phone = self.get_single_phone()
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            results = executor.map(self.get_single_phone(), phones_url)
+            results = executor.map(fetch_single_phone, phones_url)
             
             for result in results:
                 phone_price.append(result[0])
