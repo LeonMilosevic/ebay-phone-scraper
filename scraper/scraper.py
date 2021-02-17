@@ -165,7 +165,7 @@ class Scraper:
         
         return [temp_price, temp_model, temp_ram, temp_storage, temp_processor, temp_camera]
 
-    def scrape_phones(self) -> file:
+    def scrape_phones(self) -> None:
         """Main function of the package. Scrapes the data with other functions, creates a dataframe,
         exports the dataframe as csv file.
 
