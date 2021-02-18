@@ -25,7 +25,7 @@ from scraper.scraper import Scraper
 ##### Scrape ebay for phones:
 
 ```python
-scraper = Scraper('Apple', 5000, 'new')\
+scraper = Scraper('Apple', 5000, 'new')
 scraper.scrape_phones()
 ```
 ##### Expected Results:
