@@ -18,14 +18,16 @@ Package will help you scrape phones based on provided brand
 Install prerequisite from requirements.txt
 
 Import class:
-
-- from scraper.scraper import Scraper
+```python
+from scraper.scraper import Scraper
+```
 
 ##### Scrape ebay for phones:
 
+```python
 scraper = Scraper('Apple', 5000, 'new')\
 scraper.scrape_phones()
-
+```
 ##### Expected Results:
 
 - brand_condition_data.csv file with all scraped data in main directory 
