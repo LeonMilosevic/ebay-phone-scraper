@@ -5,17 +5,9 @@ A package to help you scrape only sold, used and new phone's from ebay in Europe
 ### Introduction
 Package will help you scrape phones based on provided brand
 
-### Technologies used
-- Python
-- UserAgent
-- Beautiful Soup
-- Requests
-- Pandas
-- Numpy
-
 ### How to use it?
 
-Install prerequisite from requirements.txt
+Install prerequisites from requirements.txt
 
 Import class:
 ```python
