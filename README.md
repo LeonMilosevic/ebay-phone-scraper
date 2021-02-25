@@ -19,8 +19,7 @@ pip install git+https://github.com/LeonMilosevic/ebay-phone-scraper
 ```python
 from scraper.scraper import Scraper
 ```
-
-##### Scrape ebay for phones:
+4. Scrape ebay for phones:
 
 ```python
 scraper = Scraper('Apple', 5000, 'new')
