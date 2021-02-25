@@ -7,9 +7,15 @@ Package will help you scrape phones based on provided brand
 
 ### How to use it?
 
-Install prerequisites from requirements.txt
+1. Install the scraper
 
-Import class:
+```python
+pip install git+https://github.com/LeonMilosevic/ebay-phone-scraper
+```
+
+2. Install prerequisites from requirements.txt
+
+3. Import class:
 ```python
 from scraper.scraper import Scraper
 ```
